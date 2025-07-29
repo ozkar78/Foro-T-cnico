@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Foro</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .topic { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .form-group { margin: 10px 0; }
+        input, textarea, button { padding: 8px; margin: 5px 0; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mi Foro</h1>
+        
+        <!-- Login Form -->
+        <div id="loginForm">
+            <h2>Login</h2>
+            <div class="form-group">
+                <input type="text" id="username" placeholder="Usuario" value="admin">
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" placeholder="Contraseña" value="123456">
+            </div>
+            <button onclick="login()">Iniciar Sesión</button>
+        </div>
+
+        <!-- Main Content -->
+        <div id="mainContent" class="hidden">
+            <button onclick="logout()">Cerrar Sesión</button>
+            
+            <h2>Crear Topic</h2>
+            <div class="form-group">
+                <input type="text" id="topicTitle" placeholder="Título">
+            </div>
+            <div class="form-group">
+                <input type="text" id="topicCategory" placeholder="Categoría">
+            </div>
+            <div class="form-group">
+                <textarea id="topicMessage" placeholder="Mensaje" rows="4" cols="50"></textarea>
+            </div>
+            <button onclick="createTopic()">Crear Topic</button>
+
+            <h2>Topics</h2>
+            <div id="topicsList"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8081';
+        let token = localStorage.getItem('token');
+
+        if (token) {
+            showMainContent();
+            loadTopics();
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+                if (data.token) {
+                    token = data.token;
+                    localStorage.setItem('token', token);
+                    showMainContent();
+                    loadTopics();
+                } else {
+                    alert('Error en login');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function createTopic() {
+            const title = document.getElementById('topicTitle').value;
+            const category = document.getElementById('topicCategory').value;
+            const message = document.getElementById('topicMessage').value;
+
+            try {
+                const response = await fetch(`${API_URL}/topics`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ title, message, category })
+                });
+
+                if (response.ok) {
+                    document.getElementById('topicTitle').value = '';
+                    document.getElementById('topicCategory').value = '';
+                    document.getElementById('topicMessage').value = '';
+                    loadTopics();
+                } else {
+                    alert('Error al crear topic');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function loadTopics() {
+            try {
+                const response = await fetch(`${API_URL}/topics`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                const topicsList = document.getElementById('topicsList');
+                
+                topicsList.innerHTML = data.content.map(topic => `
+                    <div class="topic">
+                        <h3>${topic.title}</h3>
+                        <p><strong>Categoría:</strong> ${topic.category || 'Sin categoría'}</p>
+                        <p><strong>Estado:</strong> ${topic.status}</p>
+                        <p><strong>Vistas:</strong> ${topic.views}</p>
+                        <p><strong>Autor:</strong> ${topic.author}</p>
+                        <p><strong>Fecha:</strong> ${new Date(topic.creationDate).toLocaleString()}</p>
+                        <p>${topic.message}</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                alert('Error al cargar topics: ' + error.message);
+            }
+        }
+
+        function showMainContent() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            token = null;
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('mainContent').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

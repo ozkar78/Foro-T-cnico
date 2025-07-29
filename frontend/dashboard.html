@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Mi Foro</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f5f5f5; }
+        .header { background: #007bff; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
+        .topic { background: white; border-radius: 8px; padding: 20px; margin: 15px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .form-group { margin: 10px 0; }
+        input, textarea, button { padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .create-form { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Mi Foro - Dashboard</h1>
+        <button onclick="logout()">Cerrar Sesión</button>
+    </div>
+
+    <div class="container">
+        <div class="create-form">
+            <h2>Crear Nuevo Topic</h2>
+            <div class="form-group">
+                <input type="text" id="topicTitle" placeholder="Título del topic" style="width: 100%; box-sizing: border-box;">
+            </div>
+            <div class="form-group">
+                <select id="topicCategory" style="width: 100%; box-sizing: border-box; padding: 10px;">
+                    <option value="GENERAL">General</option>
+                    <option value="JAVA">Java</option>
+                    <option value="SPRING">Spring Framework</option>
+                    <option value="DATABASE">Base de Datos</option>
+                    <option value="FRONTEND">Frontend</option>
+                    <option value="BACKEND">Backend</option>
+                    <option value="DEVOPS">DevOps</option>
+                    <option value="MOBILE">Desarrollo Móvil</option>
+                    <option value="HELP">Ayuda</option>
+                    <option value="TUTORIAL">Tutorial</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <textarea id="topicMessage" placeholder="Escribe tu mensaje aquí..." rows="4" style="width: 100%; box-sizing: border-box;"></textarea>
+            </div>
+            <button onclick="createTopic()">Crear Topic</button>
+        </div>
+
+        <h2>Topics Recientes</h2>
+        <div id="topicsList"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8081';
+        let token = localStorage.getItem('token');
+
+        // Verificar si está logueado
+        if (!token) {
+            window.location.href = 'login.html';
+        } else {
+            loadTopics();
+        }
+
+        async function createTopic() {
+            const title = document.getElementById('topicTitle').value;
+            const category = document.getElementById('topicCategory').value;
+            const message = document.getElementById('topicMessage').value;
+
+            if (!title || !message) {
+                alert('Por favor completa título y mensaje');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/topics`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ title, message, category })
+                });
+
+                if (response.ok) {
+                    document.getElementById('topicTitle').value = '';
+                    document.getElementById('topicCategory').value = '';
+                    document.getElementById('topicMessage').value = '';
+                    loadTopics();
+                } else {
+                    alert('Error al crear topic');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function loadTopics() {
+            try {
+                const response = await fetch(`${API_URL}/topics`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                const topicsList = document.getElementById('topicsList');
+                
+                const getStatusColor = (status) => {
+                    switch(status) {
+                        case 'OPEN': return 'green';
+                        case 'IN_PROGRESS': return 'orange';
+                        case 'RESOLVED': return 'blue';
+                        case 'CLOSED': return 'red';
+                        case 'ARCHIVED': return 'gray';
+                        default: return 'black';
+                    }
+                };
+                
+                const getStatusText = (status) => {
+                    switch(status) {
+                        case 'OPEN': return 'Abierto';
+                        case 'IN_PROGRESS': return 'En Progreso';
+                        case 'RESOLVED': return 'Resuelto';
+                        case 'CLOSED': return 'Cerrado';
+                        case 'ARCHIVED': return 'Archivado';
+                        default: return status || 'Abierto';
+                    }
+                };
+                
+                const getCategoryText = (category) => {
+                    const categories = {
+                        'JAVA': 'Java',
+                        'SPRING': 'Spring Framework',
+                        'DATABASE': 'Base de Datos',
+                        'FRONTEND': 'Frontend',
+                        'BACKEND': 'Backend',
+                        'DEVOPS': 'DevOps',
+                        'MOBILE': 'Desarrollo Móvil',
+                        'GENERAL': 'General',
+                        'HELP': 'Ayuda',
+                        'TUTORIAL': 'Tutorial'
+                    };
+                    return categories[category] || category || 'General';
+                };
+                
+                topicsList.innerHTML = data.content.map(topic => `
+                    <div class="topic">
+                        <h3>${topic.title}</h3>
+                        <p><strong>Categoría:</strong> ${getCategoryText(topic.category)}</p>
+                        <p><strong>Estado:</strong> <span style="color: ${getStatusColor(topic.status)}">${getStatusText(topic.status)}</span></p>
+                        <p><strong>Vistas:</strong> ${topic.views || 0} | <strong>Autor:</strong> ${topic.author}</p>
+                        <p><strong>Fecha:</strong> ${new Date(topic.creationDate).toLocaleString()}</p>
+                        <p style="margin-top: 15px;">${topic.message}</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                alert('Error al cargar topics: ' + error.message);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

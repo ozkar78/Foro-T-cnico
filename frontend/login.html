@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Mi Foro</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .login-container { max-width: 400px; margin: 100px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .form-group { margin: 15px 0; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        h1 { text-align: center; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Iniciar Sesión</h1>
+        <div class="form-group">
+            <input type="text" id="username" placeholder="Usuario" value="admin">
+        </div>
+        <div class="form-group">
+            <input type="password" id="password" placeholder="Contraseña" value="123456">
+        </div>
+        <button onclick="login()">Iniciar Sesión</button>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8081';
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert('Credenciales incorrectas');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

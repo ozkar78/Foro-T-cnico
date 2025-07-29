@@ -1,0 +1,41 @@
+@startuml Database-Schema
+!theme aws-orange
+title 🗄️ Esquema de Base de Datos - Foro Técnico
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+
+entity "👤 users" as users {
+  * **id** : BIGINT <<PK>>
+  --
+  * username : VARCHAR(50) <<UNIQUE>>
+  * password : VARCHAR(255)
+  * email : VARCHAR(100)
+  created_at : TIMESTAMP
+}
+
+entity "📝 topics" as topics {
+  * **id** : BIGINT <<PK>>
+  --
+  * title : VARCHAR(255)
+  * message : TEXT
+  * category : ENUM('JAVA', 'SPRING', 'DATABASE', ...)
+  * status : ENUM('OPEN', 'IN_PROGRESS', 'RESOLVED', ...)
+  * views : INT DEFAULT 0
+  * active : BOOLEAN DEFAULT TRUE
+  * creation_date : TIMESTAMP
+  * last_modified : TIMESTAMP
+  * **user_id** : BIGINT <<FK>>
+}
+
+' Relationships
+users ||--o{ topics : "author"
+
+' Notes
+note right of users : "Usuarios del sistema\nAutenticación JWT"
+note right of topics : "Topics del foro\nCategorías predefinidas\nEstados de seguimiento"
+
+' Indexes
+note bottom of topics : "Índices:\n- idx_category\n- idx_status\n- idx_active\n- idx_creation_date"
+
+@enduml

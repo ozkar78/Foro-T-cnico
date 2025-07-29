@@ -1,0 +1,118 @@
+@startuml Foro-Architecture
+!theme aws-orange
+title Arquitectura del Sistema - Foro Técnico
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+' Frontend Layer
+package "🎨 Frontend Layer" as frontend #E3F2FD {
+  component [Login Page] as login #BBDEFB
+  component [Dashboard] as dashboard #BBDEFB
+  component [Topic Management] as topicUI #BBDEFB
+  
+  note right of login : "Autenticación de usuarios\nHTML + JavaScript"
+  note right of dashboard : "Gestión de topics\nSPA Responsive"
+}
+
+' API Layer
+package "🔗 API Layer" as api #E8F5E8 {
+  component [Auth Controller] as authCtrl #C8E6C9
+  component [Topic Controller] as topicCtrl #C8E6C9
+  component [Global Exception Handler] as errorHandler #C8E6C9
+  
+  note right of authCtrl : "POST /auth/login\nPOST /auth/register"
+  note right of topicCtrl : "CRUD Operations\nPaginación"
+}
+
+' Security Layer
+package "🔐 Security Layer" as security #FFF3E0 {
+  component [Security Filter] as secFilter #FFE0B2
+  component [JWT Service] as jwtService #FFE0B2
+  component [CORS Config] as corsConfig #FFE0B2
+  
+  note right of jwtService : "Token Generation\nToken Validation"
+}
+
+' Business Layer
+package "💼 Business Layer" as business #F3E5F5 {
+  component [Authentication Service] as authService #E1BEE7
+  component [Topic Service] as topicService #E1BEE7
+  component [User Service] as userService #E1BEE7
+  
+  note right of authService : "Business Logic\nPassword Encryption"
+}
+
+' Data Layer
+package "🗄️ Data Layer" as data #FFEBEE {
+  component [Topic Repository] as topicRepo #FFCDD2
+  component [User Repository] as userRepo #FFCDD2
+  component [JPA/Hibernate] as jpa #FFCDD2
+}
+
+' Database
+database "🗃️ MySQL Database" as mysql #FFF8E1 {
+  entity "topics" as topicsTable
+  entity "users" as usersTable
+  
+  topicsTable ||--o{ usersTable : "author_id"
+}
+
+' External Services
+cloud "🌐 External Services" as external #F1F8E9 {
+  component [Swagger UI] as swagger #DCEDC8
+  component [H2 Console] as h2console #DCEDC8
+}
+
+' Connections - Frontend to API
+login --> authCtrl : "POST /auth/login"
+dashboard --> topicCtrl : "GET /topics"
+topicUI --> topicCtrl : "POST, PUT, DELETE"
+
+' Connections - API to Security
+authCtrl --> secFilter : "authenticate"
+topicCtrl --> secFilter : "authorize"
+secFilter --> jwtService : "validate token"
+
+' Connections - API to Business
+authCtrl --> authService : "login()"
+topicCtrl --> topicService : "CRUD operations"
+
+' Connections - Business to Data
+authService --> userRepo : "findByUsername()"
+topicService --> topicRepo : "save(), findAll()"
+userService --> userRepo : "save(), find()"
+
+' Connections - Data to Database
+topicRepo --> jpa : "JPA Queries"
+userRepo --> jpa : "JPA Queries"
+jpa --> mysql : "SQL"
+
+' External connections
+topicCtrl --> swagger : "API Documentation"
+mysql --> h2console : "Database Console"
+
+' Error handling
+errorHandler --> authCtrl : "handle exceptions"
+errorHandler --> topicCtrl : "handle exceptions"
+
+' CORS
+corsConfig --> authCtrl : "allow origins"
+corsConfig --> topicCtrl : "allow origins"
+
+' Styling
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #666666
+  FontSize 11
+}
+
+skinparam package {
+  BackgroundColor #F5F5F5
+  BorderColor #333333
+  FontSize 14
+  FontStyle bold
+}
+
+@enduml
