@@ -45,7 +45,9 @@ frontend/login.html
 
 | Servicio | URL | Descripción |
 |----------|-----|-------------|
-| 🎨 **Frontend** | `file:///[ruta]/frontend/login.html` | Interfaz de usuario |
+| 🎨 **Login** | `file:///[ruta]/frontend/login.html` | Página de inicio |
+| 🏠 **Dashboard** | `file:///[ruta]/frontend/dashboard.html` | Lista de topics |
+| 📝 **Topic Detail** | `file:///[ruta]/frontend/topic-detail.html` | Detalles y comentarios |
 | 🔧 **API** | http://localhost:8081 | Backend REST API |
 | 📚 **Swagger** | http://localhost:8081/swagger-ui.html | Documentación API |
 | 🗄️ **Base de datos** | localhost:3306/foro_db | MySQL Database |
@@ -57,8 +59,10 @@ frontend/login.html
 1. **Login** → Usa `admin` / `123456`
 2. **Crear Topic** → Selecciona categoría (Java, Spring, etc.)
 3. **Ver Topics** → Lista con vistas, estados y fechas
-4. **Explorar API** → Swagger UI para testing
-5. **Base de datos** → Verifica datos en MySQL
+4. **Hacer clic en título** → Ve detalles del topic
+5. **Agregar comentarios** → Interactúa con otros usuarios
+6. **Explorar API** → Swagger UI para testing
+7. **Base de datos** → Verifica datos en MySQL
 
 ---
 
@@ -92,8 +96,10 @@ Si todo funciona correctamente deberías ver:
 - ✅ Aplicación iniciada en puerto 8081
 - ✅ Login exitoso con credenciales
 - ✅ Dashboard con formulario de creación
-- ✅ Lista de topics con datos completos
+- ✅ Lista de topics con enlaces clickeables
+- ✅ Página de detalle con comentarios
+- ✅ Sistema de comentarios funcional
 - ✅ Swagger UI accesible
-- ✅ Base de datos con tablas creadas
+- ✅ Base de datos con 3 tablas: users, topics, comments
 
 ¡Listo para usar! 🎉

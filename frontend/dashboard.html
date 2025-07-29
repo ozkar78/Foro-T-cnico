@@ -145,7 +145,7 @@
                 
                 topicsList.innerHTML = data.content.map(topic => `
                     <div class="topic">
-                        <h3>${topic.title}</h3>
+                        <h3><a href="topic-detail.html?id=${topic.id}" style="text-decoration: none; color: #007bff;">${topic.title}</a></h3>
                         <p><strong>Categoría:</strong> ${getCategoryText(topic.category)}</p>
                         <p><strong>Estado:</strong> <span style="color: ${getStatusColor(topic.status)}">${getStatusText(topic.status)}</span></p>
                         <p><strong>Vistas:</strong> ${topic.views || 0} | <strong>Autor:</strong> ${topic.author}</p>

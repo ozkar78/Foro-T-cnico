@@ -30,11 +30,18 @@
 - **Contador de Vistas** - Tracking automático de visualizaciones
 - **Paginación** - Listado eficiente de contenido
 
+### 💬 **Sistema de Comentarios**
+- **Comentarios por Topic** - Discusiones completas
+- **CRUD de Comentarios** - Crear y eliminar comentarios
+- **Autorización** - Solo el autor puede eliminar sus comentarios
+- **Tiempo Real** - Actualización automática de comentarios
+
 ### 🎨 **Frontend Moderno**
-- **SPA Responsive** - Interfaz de usuario intuitiva
-- **Login/Dashboard** - Flujo de usuario completo
+- **Multi-página** - Login → Dashboard → Topic Detail
+- **Interfaz Intuitiva** - Navegación fluida entre secciones
 - **Tiempo Real** - Actualización automática de datos
 - **Categorías Visuales** - Colores por estado y tipo
+- **Responsive Design** - Adaptable a cualquier dispositivo
 
 ### 🏗️ **Arquitectura Robusta**
 - **Clean Architecture** - Separación clara de responsabilidades
@@ -162,6 +169,12 @@ file:///C:/ruta/completa/al/proyecto/frontend/login.html
 - **Usuario**: `admin`
 - **Contraseña**: `123456`
 
+### 8️⃣ Explorar Funcionalidades
+1. **Crear Topics** con diferentes categorías
+2. **Hacer clic en títulos** para ver detalles
+3. **Agregar comentarios** a los topics
+4. **Ver interacciones** en tiempo real
+
 ### 7️⃣ Probar la API (Opcional)
 Puedes probar directamente con herramientas como Postman o Insomnia:
 
@@ -199,8 +212,10 @@ Authorization: Bearer {tu_token_aqui}
 2. **🌐 Abre el frontend** en `frontend/login.html`
 3. **🔐 Inicia sesión** con `admin` / `123456`
 4. **📝 Crea un topic** seleccionando una categoría
-5. **👀 Ve la lista** de topics con contadores de vistas
-6. **📊 Explora la API** en http://localhost:8081/swagger-ui.html
+5. **🔍 Haz clic en el título** para ver detalles del topic
+6. **💬 Agrega comentarios** y ve la interacción
+7. **👀 Observa contadores** de vistas actualizándose
+8. **📊 Explora la API** en http://localhost:8081/swagger-ui.html
 
 ### 🔗 Enlaces importantes:
 - **Frontend**: `file:///[ruta-proyecto]/frontend/login.html`
@@ -227,6 +242,13 @@ PUT    /topics/{id}  # Actualizar topic
 DELETE /topics/{id}  # Eliminar topic
 ```
 
+### 💬 Comentarios
+```http
+GET    /topics/{id}/comments           # Listar comentarios de un topic
+POST   /topics/{id}/comments           # Crear comentario
+DELETE /topics/{id}/comments/{commentId} # Eliminar comentario
+```
+
 ### 📚 Documentación
 ```http
 GET /swagger-ui.html # Documentación interactiva
@@ -248,7 +270,17 @@ Authorization: Bearer {token}
 }
 ```
 
-### Respuesta
+### Crear Comentario
+```json
+POST /topics/1/comments
+Authorization: Bearer {token}
+
+{
+  "content": "Puedes usar @EnableWebSecurity y configurar SecurityFilterChain"
+}
+```
+
+### Respuesta Topic
 ```json
 {
   "id": 1,
@@ -256,7 +288,7 @@ Authorization: Bearer {token}
   "message": "¿Cómo configurar JWT correctamente?",
   "category": "SPRING",
   "status": "OPEN",
-  "views": 0,
+  "views": 5,
   "author": "admin",
   "creationDate": "2025-01-29T10:30:00",
   "lastModified": "2025-01-29T10:30:00"

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topic Detail - Mi Foro</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f5f5f5; }
+        .header { background: #007bff; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
+        .topic-detail { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .comment { background: white; border-radius: 8px; padding: 15px; margin: 10px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #007bff; }
+        .comment-form { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .form-group { margin: 10px 0; }
+        textarea, button { padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .back-btn { background: #6c757d; }
+        .back-btn:hover { background: #545b62; }
+        .meta { color: #666; font-size: 0.9em; margin-bottom: 10px; }
+        .delete-btn { background: #dc3545; font-size: 0.8em; padding: 5px 10px; }
+        .delete-btn:hover { background: #c82333; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Mi Foro - Topic Detail</h1>
+        <div>
+            <button class="back-btn" onclick="goBack()">← Volver</button>
+            <button onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Topic Detail -->
+        <div id="topicDetail" class="topic-detail"></div>
+
+        <!-- Comment Form -->
+        <div class="comment-form">
+            <h3>💬 Agregar Comentario</h3>
+            <div class="form-group">
+                <textarea id="commentContent" placeholder="Escribe tu comentario aquí..." rows="3" style="width: 100%; box-sizing: border-box;"></textarea>
+            </div>
+            <button onclick="publishComment()">Publicar Comentario</button>
+        </div>
+
+        <!-- Comments List -->
+        <div>
+            <h3>💬 Comentarios</h3>
+            <div id="commentsList"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8081';
+        let token = localStorage.getItem('token');
+        let currentTopicId = new URLSearchParams(window.location.search).get('id');
+        let currentUser = null;
+
+        if (!token || !currentTopicId) {
+            window.location.href = 'login.html';
+        } else {
+            getCurrentUser();
+            loadTopicDetail();
+            loadComments();
+        }
+        
+        async function getCurrentUser() {
+            try {
+                const response = await fetch(`${API_URL}/topics`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    console.log('Usuario autenticado correctamente');
+                }
+            } catch (error) {
+                console.error('Error de autenticación:', error);
+            }
+        }
+
+        async function loadTopicDetail() {
+            try {
+                const response = await fetch(`${API_URL}/topics/${currentTopicId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const topic = await response.json();
+                currentUser = topic.author; // Asumimos que el usuario actual es el autor por simplicidad
+                
+                const getCategoryText = (category) => {
+                    const categories = {
+                        'JAVA': 'Java', 'SPRING': 'Spring Framework', 'DATABASE': 'Base de Datos',
+                        'FRONTEND': 'Frontend', 'BACKEND': 'Backend', 'DEVOPS': 'DevOps',
+                        'MOBILE': 'Desarrollo Móvil', 'GENERAL': 'General', 'HELP': 'Ayuda', 'TUTORIAL': 'Tutorial'
+                    };
+                    return categories[category] || category || 'General';
+                };
+                
+                const getStatusText = (status) => {
+                    const statuses = {
+                        'OPEN': 'Abierto', 'IN_PROGRESS': 'En Progreso', 'RESOLVED': 'Resuelto',
+                        'CLOSED': 'Cerrado', 'ARCHIVED': 'Archivado'
+                    };
+                    return statuses[status] || status || 'Abierto';
+                };
+
+                document.getElementById('topicDetail').innerHTML = `
+                    <h2>${topic.title}</h2>
+                    <div class="meta">
+                        <strong>Categoría:</strong> ${getCategoryText(topic.category)} | 
+                        <strong>Estado:</strong> ${getStatusText(topic.status)} | 
+                        <strong>Vistas:</strong> ${topic.views || 0} | 
+                        <strong>Autor:</strong> ${topic.author} | 
+                        <strong>Fecha:</strong> ${new Date(topic.creationDate).toLocaleString()}
+                    </div>
+                    <p>${topic.message}</p>
+                `;
+            } catch (error) {
+                alert('Error al cargar topic: ' + error.message);
+            }
+        }
+
+        async function loadComments() {
+            try {
+                const response = await fetch(`${API_URL}/topics/${currentTopicId}/comments`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                const commentsList = document.getElementById('commentsList');
+                
+                if (data.content.length === 0) {
+                    commentsList.innerHTML = '<p style="text-align: center; color: #666;">No hay comentarios aún. ¡Sé el primero en comentar!</p>';
+                    return;
+                }
+                
+                commentsList.innerHTML = data.content.map(comment => `
+                    <div class="comment">
+                        <div class="meta">
+                            <strong>${comment.author}</strong> • ${new Date(comment.creationDate).toLocaleString()}
+                            ${comment.author === currentUser ? `<button class="delete-btn" onclick="deleteComment(${comment.id})">Eliminar</button>` : ''}
+                        </div>
+                        <p>${comment.content}</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                alert('Error al cargar comentarios: ' + error.message);
+            }
+        }
+
+        async function publishComment() {
+            const content = document.getElementById('commentContent').value.trim();
+            
+            if (!content) {
+                alert('Por favor escribe un comentario');
+                return;
+            }
+
+            try {
+                console.log('Enviando comentario:', { content });
+                const response = await fetch(`${API_URL}/topics/${currentTopicId}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ content })
+                });
+
+                console.log('Respuesta:', response.status);
+                
+                if (response.ok) {
+                    document.getElementById('commentContent').value = '';
+                    loadComments();
+                    alert('Comentario publicado exitosamente!');
+                } else {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    alert('Error al crear comentario: ' + response.status);
+                }
+            } catch (error) {
+                console.error('Error completo:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function deleteComment(commentId) {
+            if (!confirm('¿Estás seguro de eliminar este comentario?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/topics/${currentTopicId}/comments/${commentId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    loadComments();
+                } else {
+                    alert('Error al eliminar comentario');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'dashboard.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

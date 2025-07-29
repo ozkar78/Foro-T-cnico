@@ -28,14 +28,28 @@ entity "📝 topics" as topics {
   * **user_id** : BIGINT <<FK>>
 }
 
+entity "💬 comments" as comments {
+  * **id** : BIGINT <<PK>>
+  --
+  * content : TEXT
+  * creation_date : TIMESTAMP
+  * active : BOOLEAN DEFAULT TRUE
+  * **topic_id** : BIGINT <<FK>>
+  * **user_id** : BIGINT <<FK>>
+}
+
 ' Relationships
 users ||--o{ topics : "author"
+users ||--o{ comments : "author"
+topics ||--o{ comments : "topic"
 
 ' Notes
 note right of users : "Usuarios del sistema\nAutenticación JWT"
 note right of topics : "Topics del foro\nCategorías predefinidas\nEstados de seguimiento"
+note right of comments : "Comentarios por topic\nSistema de discusión\nAutorización por usuario"
 
 ' Indexes
 note bottom of topics : "Índices:\n- idx_category\n- idx_status\n- idx_active\n- idx_creation_date"
+note bottom of comments : "Índices:\n- idx_topic_id\n- idx_user_id\n- idx_active\n- idx_creation_date"
 
 @enduml

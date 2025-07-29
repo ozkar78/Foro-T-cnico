@@ -10,20 +10,24 @@ skinparam defaultFontSize 12
 package "🎨 Frontend Layer" as frontend #E3F2FD {
   component [Login Page] as login #BBDEFB
   component [Dashboard] as dashboard #BBDEFB
-  component [Topic Management] as topicUI #BBDEFB
+  component [Topic Detail] as topicDetail #BBDEFB
+  component [Comment System] as commentUI #BBDEFB
   
   note right of login : "Autenticación de usuarios\nHTML + JavaScript"
-  note right of dashboard : "Gestión de topics\nSPA Responsive"
+  note right of dashboard : "Lista de topics\nNavegación"
+  note right of topicDetail : "Detalle de topic\nSistema de comentarios"
 }
 
 ' API Layer
 package "🔗 API Layer" as api #E8F5E8 {
   component [Auth Controller] as authCtrl #C8E6C9
   component [Topic Controller] as topicCtrl #C8E6C9
+  component [Comment Controller] as commentCtrl #C8E6C9
   component [Global Exception Handler] as errorHandler #C8E6C9
   
   note right of authCtrl : "POST /auth/login\nPOST /auth/register"
   note right of topicCtrl : "CRUD Operations\nPaginación"
+  note right of commentCtrl : "GET/POST/DELETE\n/topics/{id}/comments"
 }
 
 ' Security Layer
@@ -39,24 +43,30 @@ package "🔐 Security Layer" as security #FFF3E0 {
 package "💼 Business Layer" as business #F3E5F5 {
   component [Authentication Service] as authService #E1BEE7
   component [Topic Service] as topicService #E1BEE7
+  component [Comment Service] as commentService #E1BEE7
   component [User Service] as userService #E1BEE7
   
   note right of authService : "Business Logic\nPassword Encryption"
+  note right of commentService : "Comment Logic\nAuthorization"
 }
 
 ' Data Layer
-package "🗄️ Data Layer" as data #FFEBEE {
+package "🗜️ Data Layer" as data #FFEBEE {
   component [Topic Repository] as topicRepo #FFCDD2
+  component [Comment Repository] as commentRepo #FFCDD2
   component [User Repository] as userRepo #FFCDD2
   component [JPA/Hibernate] as jpa #FFCDD2
 }
 
 ' Database
-database "🗃️ MySQL Database" as mysql #FFF8E1 {
+database "🗜️ MySQL Database" as mysql #FFF8E1 {
   entity "topics" as topicsTable
+  entity "comments" as commentsTable
   entity "users" as usersTable
   
   topicsTable ||--o{ usersTable : "author_id"
+  commentsTable ||--o{ topicsTable : "topic_id"
+  commentsTable ||--o{ usersTable : "user_id"
 }
 
 ' External Services
@@ -68,7 +78,8 @@ cloud "🌐 External Services" as external #F1F8E9 {
 ' Connections - Frontend to API
 login --> authCtrl : "POST /auth/login"
 dashboard --> topicCtrl : "GET /topics"
-topicUI --> topicCtrl : "POST, PUT, DELETE"
+topicDetail --> topicCtrl : "GET /topics/{id}"
+commentUI --> commentCtrl : "GET/POST/DELETE comments"
 
 ' Connections - API to Security
 authCtrl --> secFilter : "authenticate"
@@ -78,14 +89,17 @@ secFilter --> jwtService : "validate token"
 ' Connections - API to Business
 authCtrl --> authService : "login()"
 topicCtrl --> topicService : "CRUD operations"
+commentCtrl --> commentService : "comment operations"
 
 ' Connections - Business to Data
 authService --> userRepo : "findByUsername()"
 topicService --> topicRepo : "save(), findAll()"
+commentService --> commentRepo : "save(), findByTopicId()"
 userService --> userRepo : "save(), find()"
 
 ' Connections - Data to Database
 topicRepo --> jpa : "JPA Queries"
+commentRepo --> jpa : "JPA Queries"
 userRepo --> jpa : "JPA Queries"
 jpa --> mysql : "SQL"
 
